@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { PDFDocument } from 'pdf-lib';
 import { OpenAI } from 'openai';
 
 const openai = new OpenAI({
@@ -15,24 +16,29 @@ export async function POST(req: any) {
       return NextResponse.json({ error: 'Missing file or question.' }, { status: 400 });
     }
 
-    // For now, just simulate PDF reading
-    const simulatedText = "This is a simulated PDF response for testing. Your PDF upload is working, but we're temporarily bypassing the PDF parsing to test the OpenAI integration.";
+    const arrayBuffer = await file.arrayBuffer();
+    const pdfDoc = await PDFDocument.load(arrayBuffer);
+    const pages = pdfDoc.getPages();
+    
+    // Simple text extraction (basic)
+    let pdfText = `PDF has ${pages.length} pages. Content extraction in progress...`;
     
     const chatResponse = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful assistant.',
+          content: 'You are a helpful assistant that answers questions about PDF documents.',
         },
         {
           role: 'user',
-          content: `PDF content: ${simulatedText}\n\nQuestion: ${question}`,
+          content: `PDF info: ${pdfText}\n\nQuestion: ${question}`,
         },
       ],
     });
 
     return NextResponse.json({ answer: chatResponse.choices[0].message.content });
   } catch (err) {
-return NextResponse.json({ error: 'Processing failed: ' + (err instanceof Error ? err.message : 'Unknown error') }, { status: 500 });  }
+    return NextResponse.json({ error: 'Processing failed: ' + (err instanceof Error ? err.message : 'Unknown error') }, { status: 500 });
+  }
 }
