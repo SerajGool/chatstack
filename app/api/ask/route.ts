@@ -2,36 +2,24 @@ import { NextResponse } from 'next/server';
 import pdfParse from 'pdf-parse';
 import { OpenAI } from 'openai';
 
-export const runtime = 'nodejs';
-
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 export async function POST(req: any) {
   try {
-    console.log('API called');
-    
     const formData = await req.formData();
     const file = formData.get('file');
     const question = formData.get('question');
-    
-    console.log('File:', file ? 'exists' : 'missing');
-    console.log('Question:', question);
 
     if (!file || !question) {
       return NextResponse.json({ error: 'Missing file or question.' }, { status: 400 });
     }
 
-    console.log('Parsing PDF...');
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const data = await pdfParse(buffer);
-    const pdfText = data.text;
     
-    console.log('PDF text length:', pdfText.length);
-
-    console.log('Calling OpenAI...');
     const chatResponse = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
@@ -41,18 +29,13 @@ export async function POST(req: any) {
         },
         {
           role: 'user',
-          content: `The following is the content of the PDF:\n\n${pdfText.slice(0, 8000)}\n\nQuestion: ${question}`,
+          content: `PDF content: ${data.text.slice(0, 8000)}\n\nQuestion: ${question}`,
         },
       ],
     });
 
-    const answer = chatResponse.choices[0].message.content;
-    console.log('OpenAI response received');
-    return NextResponse.json({ answer });
+    return NextResponse.json({ answer: chatResponse.choices[0].message.content });
   } catch (err) {
-    console.error('Detailed error:', err);
-    return NextResponse.json({ 
-      error: 'Detailed error: ' + (err instanceof Error ? err.message : 'Unknown error')
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Processing failed' }, { status: 500 });
   }
 }
