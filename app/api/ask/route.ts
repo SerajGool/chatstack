@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { PDFDocument } from 'pdf-lib';
 import { OpenAI } from 'openai';
 
 const openai = new OpenAI({
@@ -16,23 +15,23 @@ export async function POST(req: any) {
       return NextResponse.json({ error: 'Missing file or question.' }, { status: 400 });
     }
 
+    // For now, let's use a simple approach that works
     const arrayBuffer = await file.arrayBuffer();
-    const pdfDoc = await PDFDocument.load(arrayBuffer);
-    const pages = pdfDoc.getPages();
+    const uint8Array = new Uint8Array(arrayBuffer);
     
-    // Simple text extraction (basic)
-    let pdfText = `PDF has ${pages.length} pages. Content extraction in progress...`;
+    // Basic PDF info (we'll add text extraction once this works)
+    const pdfText = `PDF file uploaded successfully (${uint8Array.length} bytes). This is a basic response while we work on text extraction.`;
     
     const chatResponse = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful assistant that answers questions about PDF documents.',
+          content: 'You are a helpful assistant. The user uploaded a PDF but text extraction is still being implemented.',
         },
         {
           role: 'user',
-          content: `PDF info: ${pdfText}\n\nQuestion: ${question}`,
+          content: `Question about uploaded PDF: ${question}`,
         },
       ],
     });
