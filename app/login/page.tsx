@@ -1,6 +1,6 @@
 "use client"
-import { useState } from 'react';
-import { MessageCircle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MessageCircle, Eye, EyeOff, ArrowLeft, CheckCircle, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 export default function LoginPage() {
@@ -13,6 +13,18 @@ export default function LoginPage() {
     confirmPassword: '',
     name: ''
   });
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Auto-hide success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage('');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -27,16 +39,18 @@ export default function LoginPage() {
         });
 
         if (error) {
-          alert('Login failed: ' + error.message);
+          setErrorMessage('Login failed: ' + error.message);
         } else {
-          alert('Login successful!');
+          setSuccessMessage('Login successful!');
           // Redirect to dashboard
-          window.location.href = '/dashboard';
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 2000);
         }
       } else {
         // SIGNUP
         if (formData.password !== formData.confirmPassword) {
-          alert('Passwords do not match');
+          setErrorMessage('Passwords do not match');
           setLoading(false);
           return;
         }
@@ -52,15 +66,17 @@ export default function LoginPage() {
         });
 
         if (error) {
-          alert('Signup failed: ' + error.message);
+          setErrorMessage('Signup failed: ' + error.message);
         } else {
-          alert('Account created successfully! You can now login.');
-          setIsLogin(true); // Switch to login mode
-          setFormData({ email: '', password: '', confirmPassword: '', name: '' });
+          setSuccessMessage('Account created successfully! You can now login.');
+          setTimeout(() => {
+            setIsLogin(true); // Switch to login mode
+            setFormData({ email: '', password: '', confirmPassword: '', name: '' });
+          }, 2000);
         }
       }
     } catch (error) {
-      alert('An error occurred. Please try again.');
+      setErrorMessage('An error occurred. Please try again.');
     }
 
     setLoading(false);
@@ -76,14 +92,15 @@ export default function LoginPage() {
       });
 
       if (error) {
-        alert('Google login failed: ' + error.message);
+        setErrorMessage('Google login failed: ' + error.message);
       }
     } catch (error) {
-      alert('An error occurred with Google login. Please try again.');
+      setErrorMessage('An error occurred with Google login. Please try again.');
     }
   };
 
   const handleInputChange = (e: any) => {
+    setErrorMessage(''); // Clear error when user starts typing
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
@@ -219,6 +236,13 @@ export default function LoginPage() {
               </div>
             )}
 
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="text-red-600 text-sm font-medium bg-red-50 border border-red-200 rounded-lg p-3">
+                {errorMessage}
+              </div>
+            )}
+
             {/* Submit Button */}
             <button
               onClick={handleSubmit}
@@ -257,6 +281,20 @@ export default function LoginPage() {
           <p>🎉 Now using real authentication! Create your account and login for real.</p>
         </div>
       </div>
+
+      {/* Success Message Popup */}
+      {successMessage && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-in slide-in-from-top-2 duration-300">
+          <CheckCircle className="w-5 h-5" />
+          <span className="font-medium">{successMessage}</span>
+          <button
+            onClick={() => setSuccessMessage('')}
+            className="ml-2 text-green-200 hover:text-white"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
