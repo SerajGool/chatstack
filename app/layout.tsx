@@ -14,7 +14,12 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "ChatStack l AI Agents for Business",
-  description: "South Africa's first self-service platform to create intelligent AI powered Chatbots to deploy to websites and integrate with social media accounts - no coding required",
+  description: "...",
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({
