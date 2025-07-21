@@ -32,8 +32,8 @@ export default function ResetPasswordPage() {
 
     try {
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password-confirm`,
-      });
+  redirectTo: `https://chatstack.co.za/reset-password-confirm`,
+});
 
       if (error) {
         setErrorMessage('Reset failed: ' + error.message);
