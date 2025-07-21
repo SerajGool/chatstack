@@ -54,7 +54,7 @@ export default function Index() {
               <Link href="/login">
                 <Button variant="ghost" className="hidden md:inline-flex">Sign In</Button>
               </Link>
-              <Link href="/login">
+              <Link href="/get-started">
                 <Button className="bg-black text-white relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 hover:bg-gray-800 transition-colors">Get Started</Button>
               </Link>
             </div>
@@ -80,7 +80,7 @@ export default function Index() {
               </p>
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-                <Link href="/login">
+                <Link href="/get-started">
                   <Button size="lg" className="bg-black text-white relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 hover:bg-gray-800 transition-colors text-lg px-8 py-3">
                     Build Your Chatbot
                   </Button>
@@ -251,7 +251,7 @@ export default function Index() {
                   <li className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-3" />Basic Analytics</li>
                   <li className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-3" />Community Support</li>
                 </ul>
-                <Link href="/login">
+                <Link href="/get-started">
                   <Button className="w-full mt-6" variant="outline">Get Started</Button>
                 </Link>
               </CardContent>
@@ -277,7 +277,7 @@ export default function Index() {
                   <li className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-3" />Advanced Analytics</li>
                   <li className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-3" />Priority Support</li>
                 </ul>
-                <Link href="/login">
+                <Link href="/get-started">
                   <Button className="w-full mt-6 bg-black text-white relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 hover:bg-gray-800 transition-colors">Subscribe</Button>
                 </Link>
               </CardContent>
@@ -300,7 +300,7 @@ export default function Index() {
                   <li className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-3" />White-label Solution</li>
                   <li className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-3" />Dedicated Support</li>
                 </ul>
-                <Link href="/login">
+                <Link href="/get-started">
                   <Button className="w-full mt-6" variant="outline">Contact Sales</Button>
                 </Link>
               </CardContent>
@@ -408,7 +408,7 @@ export default function Index() {
           </p>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-center mb-6">
-            <Link href="/login">
+            <Link href="/get-started">
               <Button size="lg" className="bg-black text-white relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 hover:bg-gray-800 transition-colors text-lg px-8 py-3">
                 Build Your Chatbot
               </Button>

@@ -8,13 +8,16 @@ import { Input } from "@/components/ui/input";
 import { CheckCircle, X, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
-export default function LoginPage() {
+export default function GetStartedPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Auto-hide success message after 3 seconds
   useEffect(() => {
@@ -31,19 +34,30 @@ export default function LoginPage() {
     setLoading(true);
     setErrorMessage('');
 
+    if (password !== confirmPassword) {
+      setErrorMessage('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signUp({
         email: email,
         password: password,
+        options: {
+          data: {
+            name: name
+          }
+        }
       });
 
       if (error) {
-        setErrorMessage('Login failed: ' + error.message);
+        setErrorMessage('Signup failed: ' + error.message);
       } else {
-        setSuccessMessage('Login successful!');
-        // Redirect to dashboard
+        setSuccessMessage('Account created successfully! You can now login.');
+        // Clear form and redirect to login after 2 seconds
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          window.location.href = '/login';
         }, 2000);
       }
     } catch (error) {
@@ -92,10 +106,25 @@ export default function LoginPage() {
 
         <Card className="border-gray-200 shadow-lg">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-gray-900">Welcome Back</CardTitle>
+            <CardTitle className="text-2xl font-bold text-gray-900">Get started for free</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name
+                </label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => handleInputChange(setName, e.target.value)}
+                  placeholder="Enter your full name"
+                  required
+                  className="w-full"
+                />
+              </div>
+
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                   Email
@@ -121,7 +150,7 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => handleInputChange(setPassword, e.target.value)}
-                    placeholder="Enter your password"
+                    placeholder="Create a password"
                     required
                     className="w-full pr-12"
                   />
@@ -138,10 +167,31 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="text-right">
-                <Link href="/reset-password" className="text-sm text-blue-600 hover:text-blue-800">
-                  Forgot Password?
-                </Link>
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => handleInputChange(setConfirmPassword, e.target.value)}
+                    placeholder="Confirm your password"
+                    required
+                    className="w-full pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirmPassword ? 
+                      <EyeOff className="w-5 h-5" /> : 
+                      <Eye className="w-5 h-5" />
+                    }
+                  </button>
+                </div>
               </div>
 
               {/* Error Message */}
@@ -156,9 +206,16 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full bg-black text-white relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 after:rounded-b hover:bg-gray-800 transition-colors"
               >
-                {loading ? "Signing In..." : "Sign In"}
+                {loading ? "Creating Account..." : "Create Account"}
               </Button>
             </form>
+
+            <div className="text-center text-sm text-gray-600">
+              Already have an account?{" "}
+              <Link href="/login" className="text-blue-600 hover:text-blue-800 font-medium">
+                Sign in
+              </Link>
+            </div>
 
             <div className="mt-6">
               <div className="relative">
@@ -196,13 +253,6 @@ export default function LoginPage() {
                   <span>Continue with Google</span>
                 </Button>
               </div>
-            </div>
-
-            <div className="text-center text-sm text-gray-600">
-              Don't have an account?{" "}
-              <Link href="/get-started" className="text-blue-600 hover:text-blue-800 font-medium">
-                Get started for free
-              </Link>
             </div>
           </CardContent>
         </Card>
