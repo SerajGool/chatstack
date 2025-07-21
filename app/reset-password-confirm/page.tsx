@@ -1,29 +1,27 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function ResetPasswordConfirmPage() {
-  const searchParams = useSearchParams();
   const [isValidToken, setIsValidToken] = useState(false);
 
   useEffect(() => {
-  // Check if we have the necessary tokens from the URL hash
-  const hash = window.location.hash.substring(1); // Remove the # symbol
-  const params = new URLSearchParams(hash);
-  const accessToken = params.get('access_token');
-  const refreshToken = params.get('refresh_token');
-  
-  if (accessToken && refreshToken) {
-    setIsValidToken(true);
-    // Store tokens for the change password page
-    sessionStorage.setItem('reset_access_token', accessToken);
-    sessionStorage.setItem('reset_refresh_token', refreshToken);
-  }
-}, []);
+    // Check if we have the necessary tokens from the URL hash
+    const hash = window.location.hash.substring(1); // Remove the # symbol
+    const params = new URLSearchParams(hash);
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    
+    if (accessToken && refreshToken) {
+      setIsValidToken(true);
+      // Store tokens for the change password page
+      sessionStorage.setItem('reset_access_token', accessToken);
+      sessionStorage.setItem('reset_refresh_token', refreshToken);
+    }
+  }, []);
 
   if (!isValidToken) {
     return (
