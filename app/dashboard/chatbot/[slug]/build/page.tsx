@@ -28,7 +28,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-export default function ChatbotBuilder({ params }: { params: { slug: string } }) {
+export default function ChatbotBuilder({ params }: { params: Promise<{ slug: string }> }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
@@ -52,30 +52,31 @@ export default function ChatbotBuilder({ params }: { params: { slug: string } })
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession()
-      
-      if (error || !session?.user) {
-        router.push('/login')
-        return
-      }
-      
-      setUser(session.user)
-      setLoading(false)
-      
-      // Convert slug back to readable name
-      const name = params.slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-      setChatbotName(name)
-      
-      // Show success message if redirected from creation
-      if (searchParams.get('success') === 'created') {
-        setShowSuccessMessage(true)
-        setTimeout(() => setShowSuccessMessage(false), 5000)
-      }
+  const getUser = async () => {
+    const resolvedParams = await params
+    const { data: { session }, error } = await supabase.auth.getSession()
+    
+    if (error || !session?.user) {
+      router.push('/login')
+      return
     }
+    
+    setUser(session.user)
+    setLoading(false)
+    
+    // Convert slug back to readable name - use the already resolved params
+    const name = resolvedParams.slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+    setChatbotName(name)
+    
+    // Show success message if redirected from creation
+    if (searchParams.get('success') === 'created') {
+      setShowSuccessMessage(true)
+      setTimeout(() => setShowSuccessMessage(false), 5000)
+    }
+  }
 
-    getUser()
-  }, [router, params.slug, searchParams])
+  getUser()
+}, [router, params, searchParams])
 
   const handleFileUpload = async (files: FileList) => {
     setIsUploading(true)
