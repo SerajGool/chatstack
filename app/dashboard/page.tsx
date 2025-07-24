@@ -86,6 +86,15 @@ export default function Dashboard() {
     router.push(`/dashboard/chatbot/${slug}/build?success=created`)
   }
 
+  // Handle dropdown navigation
+  const handleDashboardClick = () => {
+    router.push('/dashboard')
+  }
+
+  const handleAccountSettingsClick = () => {
+    router.push('/dashboard/account-settings')
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -172,14 +181,18 @@ export default function Dashboard() {
                     <p className="text-xs text-gray-500">{user?.email}</p>
                   </div>
                   
-                  <DropdownMenuItem className="cursor-pointer">
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={handleDashboardClick}
+                  >
                     <LayoutDashboard className="mr-2 h-4 w-4" />
                     Dashboard
                   </DropdownMenuItem>
                   
                   <DropdownMenuItem 
+                    
                     className="cursor-pointer" 
-                    onClick={() => router.push('/account')}
+                    onClick={() => router.push('/dashboard/account-settings')}
                   >
                     <SettingsIcon className="mr-2 h-4 w-4" />
                     Account Settings

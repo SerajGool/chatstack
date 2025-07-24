@@ -1,12 +1,10 @@
 'use client'
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
 import { 
-  ArrowLeft,
   Bot, 
   FileText,
   Globe,
@@ -19,21 +17,59 @@ import {
   X,
   CheckCircle,
   Upload as UploadIcon,
-  Send
+  Send,
+  BarChart3,
+  Activity,
+  Share2,
+  Code,
+  Palette,
+  Monitor,
+  Brain,
+  Users,
+  MessageCircle,
+  TrendingUp,
+  ExternalLink,
+  Smartphone,
+  Facebook,
+  Instagram,
+  Webhook,
+  Copy,
+  Play,
+  ChevronDown,
+  ChevronRight,
+  HelpCircle,
+  LogOut,
+  Settings as SettingsIcon,
+  LayoutDashboard,
+  ChevronDown as ProfileChevronDown
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 export default function ChatbotBuilder({ params }: { params: Promise<{ slug: string }> }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
-  const [activeTab, setActiveTab] = useState('files')
+  const [activeTab, setActiveTab] = useState('overview')
   const [chatbotName, setChatbotName] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  
+  // Dropdown states
+  const [trainingDataOpen, setTrainingDataOpen] = useState(false)
+  const [activityOpen, setActivityOpen] = useState(false)
+  const [integrationsOpen, setIntegrationsOpen] = useState(false)
+  const [configurationOpen, setConfigurationOpen] = useState(false)
   
   // File upload states
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([])
@@ -41,7 +77,6 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
   const [dragActive, setDragActive] = useState(false)
   
   // Chat preview states
-  const [showPreview, setShowPreview] = useState(false)
   const [messages, setMessages] = useState([
     { type: 'bot', content: 'Hi! I\'m your AI assistant. I can help answer questions about the documents you\'ve uploaded.' }
   ])
@@ -52,37 +87,66 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
   const searchParams = useSearchParams()
 
   useEffect(() => {
-  const getUser = async () => {
-    const resolvedParams = await params
-    const { data: { session }, error } = await supabase.auth.getSession()
-    
-    if (error || !session?.user) {
-      router.push('/login')
-      return
+    const getUser = async () => {
+      const resolvedParams = await params
+      const { data: { session }, error } = await supabase.auth.getSession()
+      
+      if (error || !session?.user) {
+        router.push('/login')
+        return
+      }
+      
+      setUser(session.user)
+      setLoading(false)
+      
+      // Convert slug back to readable name
+      const name = resolvedParams.slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+      setChatbotName(name)
+      
+      // Show success message if redirected from creation
+      if (searchParams.get('success') === 'created') {
+        setShowSuccessMessage(true)
+        setTimeout(() => setShowSuccessMessage(false), 5000)
+      }
     }
-    
-    setUser(session.user)
-    setLoading(false)
-    
-    // Convert slug back to readable name - use the already resolved params
-    const name = resolvedParams.slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-    setChatbotName(name)
-    
-    // Show success message if redirected from creation
-    if (searchParams.get('success') === 'created') {
-      setShowSuccessMessage(true)
-      setTimeout(() => setShowSuccessMessage(false), 5000)
-    }
+
+    getUser()
+  }, [router, params, searchParams])
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/')
   }
 
-  getUser()
-}, [router, params, searchParams])
+  const getUserInitials = (email: string) => {
+    return email.charAt(0).toUpperCase()
+  }
+
+  const handleDashboardClick = () => {
+    router.push('/dashboard')
+  }
+
+  const handleAccountSettingsClick = () => {
+    router.push('/dashboard/account-settings')
+  }
+
+  const handleSaveChatbot = async () => {
+    setIsSaving(true)
+    
+    // Simulate save operation
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    
+    setIsSaving(false)
+    
+    // Show success message
+    setShowSuccessMessage(true)
+    setTimeout(() => setShowSuccessMessage(false), 3000)
+  }
 
   const handleFileUpload = async (files: FileList) => {
     setIsUploading(true)
     
     for (const file of Array.from(files)) {
-      // Create file entry first (outside try block)
       const newFile = {
         id: Date.now() + Math.random(),
         name: file.name,
@@ -98,10 +162,8 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
           let question = ''
           
           if (file.type === 'application/pdf') {
-            // For PDFs, use the existing question
             question = 'What is this document about? Please provide a brief summary.'
           } else if (file.type === 'text/plain') {
-            // For TXT files, ask about the content
             question = 'What is the main content and purpose of this text file? Please provide a brief summary.'
           }
           
@@ -116,7 +178,6 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
           
           const result = await response.json()
           
-          // Update file status
           setUploadedFiles(prev => prev.map(f => 
             f.id === newFile.id 
               ? { ...f, status: 'ready', summary: result.answer }
@@ -124,7 +185,6 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
           ))
           
         } catch (error) {
-          // Update file status to error
           setUploadedFiles(prev => prev.map(f => 
             f.id === newFile.id 
               ? { ...f, status: 'error', error: 'Failed to process file' }
@@ -132,7 +192,6 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
           ))
         }
       } else {
-        // Add unsupported file with error
         const errorFile = { ...newFile, status: 'error', error: 'File type not yet supported. Currently supports PDF and TXT files.' }
         setUploadedFiles(prev => [...prev, errorFile])
       }
@@ -149,7 +208,6 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
       return
     }
 
-    // Add user message
     const userMessage = { type: 'user', content: inputMessage }
     setMessages(prev => [...prev, userMessage])
     
@@ -157,17 +215,14 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
     setInputMessage('')
     setIsSending(true)
     
-    // Add loading message
     setMessages(prev => [...prev, { type: 'bot', content: '🤔 Let me check your documents...' }])
     
     try {
-      // Get all ready files instead of just the first one
       const readyFiles = uploadedFiles.filter(f => f.status === 'ready')
       if (readyFiles.length === 0) {
         throw new Error('No processed files available')
       }
       
-      // Use the most recently uploaded file (last in array)
       const latestFile = readyFiles[readyFiles.length - 1]
       
       const formData = new FormData()
@@ -181,7 +236,6 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
       
       const result = await response.json()
       
-      // Remove loading message and add real response
       setMessages(prev => {
         const withoutLoading = prev.slice(0, -1)
         const newMessages = [...withoutLoading, { 
@@ -190,7 +244,6 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
           fileName: latestFile.name 
         }]
         
-        // Auto-scroll to bottom after state update
         setTimeout(() => {
           const chatContainer = document.querySelector('#chat-messages')
           if (chatContainer) {
@@ -202,12 +255,10 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
       })
       
     } catch (error) {
-      // Remove loading message and add error
       setMessages(prev => {
         const withoutLoading = prev.slice(0, -1)
         const newMessages = [...withoutLoading, { type: 'bot', content: 'Sorry, there was an error processing your question.' }]
         
-        // Auto-scroll on error too
         setTimeout(() => {
           const chatContainer = document.querySelector('#chat-messages')
           if (chatContainer) {
@@ -237,21 +288,24 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Setting up your chatbot...</h2>
+          <p className="text-sm text-gray-500">This will only take a moment</p>
+        </div>
       </div>
     )
   }
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Success Message */}
       {showSuccessMessage && (
-        <div className="bg-green-50 border-l-4 border-green-400 p-4">
+        <div className="bg-green-50 border-l-4 border-green-400 p-4 relative z-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <CheckCircle className="h-5 w-5 text-green-400 mr-2" />
               <p className="text-sm text-green-700 font-medium">
-                Chatbot "{chatbotName}" created successfully!
+                Chatbot "{chatbotName}" saved successfully!
               </p>
             </div>
             <button
@@ -264,143 +318,539 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
         </div>
       )}
 
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="w-64 bg-white border-r border-gray-200 min-h-screen">
-          {/* Header */}
-          <div className="p-4 border-b border-gray-200">
-            <Button
-              variant="ghost"
-              onClick={() => router.push('/dashboard')}
-              className="flex items-center text-sm text-gray-600 hover:text-gray-900 p-0"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
-            </Button>
-            <h1 className="text-lg font-semibold text-gray-900 mt-2">{chatbotName}</h1>
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-8 py-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">{chatbotName}</h1>
+            <p className="text-sm text-gray-500">AI Chatbot</p>
           </div>
+          
+          <div className="flex items-center space-x-4">
+            {/* Support Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center space-x-2"
+            >
+              <HelpCircle className="h-4 w-4" />
+              <span>Support</span>
+            </Button>
 
-          {/* Navigation */}
+            {/* Profile Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md"
+                >
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user?.user_metadata?.avatar_url} />
+                    <AvatarFallback className="bg-blue-100 text-blue-700 text-sm">
+                      {user?.email ? getUserInitials(user.email) : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <ProfileChevronDown className="h-4 w-4 text-gray-500" />
+                </Button>
+              </DropdownMenuTrigger>
+              
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-3 py-2 border-b border-gray-100">
+                  <p className="text-sm font-medium text-gray-900">
+                    {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+                  </p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
+                
+                <DropdownMenuItem 
+                  className="cursor-pointer"
+                  onClick={handleDashboardClick}
+                >
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Dashboard
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem 
+                  className="cursor-pointer"
+                  onClick={handleAccountSettingsClick}
+                >
+                  <SettingsIcon className="mr-2 h-4 w-4" />
+                  Account Settings
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem 
+                  className="cursor-pointer text-red-600 hover:text-red-700"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex">
+        {/* Vertical Sidebar */}
+        <div className="w-64 bg-white border-r border-gray-200 min-h-screen">
           <nav className="p-4 space-y-1">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-              Training Data
-            </h3>
-            
+            {/* Overview */}
             <button
-              onClick={() => setActiveTab('files')}
-              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                activeTab === 'files' 
+              onClick={() => setActiveTab('overview')}
+              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'overview' 
                   ? 'text-gray-900 bg-gray-100' 
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
-              <FileText className="mr-3 h-4 w-4" />
-              Files
+              <Eye className="mr-3 h-4 w-4" />
+              Overview
             </button>
 
+            {/* Playground */}
             <button
-              onClick={() => setActiveTab('text')}
-              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                activeTab === 'text' 
+              onClick={() => setActiveTab('playground')}
+              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'playground' 
                   ? 'text-gray-900 bg-gray-100' 
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
-              <MessageSquare className="mr-3 h-4 w-4" />
-              Text
+              <Play className="mr-3 h-4 w-4" />
+              Playground
             </button>
 
-            <button
-              onClick={() => setActiveTab('website')}
-              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                activeTab === 'website' 
-                  ? 'text-gray-900 bg-gray-100' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              <Globe className="mr-3 h-4 w-4" />
-              Website
-            </button>
+            {/* Training Data Dropdown */}
+            <div>
+              <button
+                onClick={() => setTrainingDataOpen(!trainingDataOpen)}
+                className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+              >
+                <div className="flex items-center">
+                  <FileText className="mr-3 h-4 w-4" />
+                  Training Data
+                </div>
+                {trainingDataOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </button>
+              
+              {trainingDataOpen && (
+                <div className="ml-6 mt-1 space-y-1">
+                  <button
+                    onClick={() => setActiveTab('files')}
+                    className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                      activeTab === 'files' 
+                        ? 'text-gray-900 bg-gray-100' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <FileText className="mr-3 h-3 w-3" />
+                    Files
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('text')}
+                    className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                      activeTab === 'text' 
+                        ? 'text-gray-900 bg-gray-100' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <MessageSquare className="mr-3 h-3 w-3" />
+                    Text
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('website')}
+                    className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                      activeTab === 'website' 
+                        ? 'text-gray-900 bg-gray-100' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Globe className="mr-3 h-3 w-3" />
+                    Website
+                  </button>
+                </div>
+              )}
+            </div>
 
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-6 mb-3">
-              Configuration
-            </h3>
+            {/* Activity Dropdown */}
+            <div>
+              <button
+                onClick={() => setActivityOpen(!activityOpen)}
+                className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+              >
+                <div className="flex items-center">
+                  <Activity className="mr-3 h-4 w-4" />
+                  Activity
+                </div>
+                {activityOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </button>
+              
+              {activityOpen && (
+                <div className="ml-6 mt-1 space-y-1">
+                  <button
+                    onClick={() => setActiveTab('analytics')}
+                    className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                      activeTab === 'analytics' 
+                        ? 'text-gray-900 bg-gray-100' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <BarChart3 className="mr-3 h-3 w-3" />
+                    Analytics
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('chat-logs')}
+                    className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                      activeTab === 'chat-logs' 
+                        ? 'text-gray-900 bg-gray-100' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <MessageCircle className="mr-3 h-3 w-3" />
+                    Chat Logs
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('leads')}
+                    className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                      activeTab === 'leads' 
+                        ? 'text-gray-900 bg-gray-100' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Users className="mr-3 h-3 w-3" />
+                    Leads
+                  </button>
+                </div>
+              )}
+            </div>
 
-            <button
-              onClick={() => setActiveTab('instructions')}
-              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                activeTab === 'instructions' 
-                  ? 'text-gray-900 bg-gray-100' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              <Bot className="mr-3 h-4 w-4" />
-              Instructions
-            </button>
+            {/* Integrations Dropdown */}
+            <div>
+              <button
+                onClick={() => setIntegrationsOpen(!integrationsOpen)}
+                className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+              >
+                <div className="flex items-center">
+                  <Share2 className="mr-3 h-4 w-4" />
+                  Integrations
+                </div>
+                {integrationsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </button>
+              
+              {integrationsOpen && (
+                <div className="ml-6 mt-1 space-y-1">
+                  <button
+                    onClick={() => setActiveTab('website-embed')}
+                    className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                      activeTab === 'website-embed' 
+                        ? 'text-gray-900 bg-gray-100' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Code className="mr-3 h-3 w-3" />
+                    Website Embed
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('social-media')}
+                    className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                      activeTab === 'social-media' 
+                        ? 'text-gray-900 bg-gray-100' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Smartphone className="mr-3 h-3 w-3" />
+                    Social Media
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('webhooks')}
+                    className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                      activeTab === 'webhooks' 
+                        ? 'text-gray-900 bg-gray-100' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Webhook className="mr-3 h-3 w-3" />
+                    Webhooks
+                  </button>
+                </div>
+              )}
+            </div>
 
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                activeTab === 'settings' 
-                  ? 'text-gray-900 bg-gray-100' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              <Settings className="mr-3 h-4 w-4" />
-              Settings
-            </button>
+            {/* Divider */}
+            <div className="border-t border-gray-200 my-4"></div>
+
+            {/* Configuration Dropdown */}
+            <div>
+              <button
+                onClick={() => setConfigurationOpen(!configurationOpen)}
+                className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+              >
+                <div className="flex items-center">
+                  <Settings className="mr-3 h-4 w-4" />
+                  Configuration
+                </div>
+                {configurationOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </button>
+              
+              {configurationOpen && (
+                <div className="ml-6 mt-1 space-y-1">
+                  <button
+                    onClick={() => setActiveTab('general')}
+                    className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                      activeTab === 'general' 
+                        ? 'text-gray-900 bg-gray-100' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Settings className="mr-3 h-3 w-3" />
+                    General
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('ai-model')}
+                    className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                      activeTab === 'ai-model' 
+                        ? 'text-gray-900 bg-gray-100' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Brain className="mr-3 h-3 w-3" />
+                    AI Model
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('theme')}
+                    className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                      activeTab === 'theme' 
+                        ? 'text-gray-900 bg-gray-100' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Palette className="mr-3 h-3 w-3" />
+                    Theme
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('interface')}
+                    className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                      activeTab === 'interface' 
+                        ? 'text-gray-900 bg-gray-100' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Monitor className="mr-3 h-3 w-3" />
+                    Interface
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('custom-domain')}
+                    className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                      activeTab === 'custom-domain' 
+                        ? 'text-gray-900 bg-gray-100' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Globe className="mr-3 h-3 w-3" />
+                    Custom Domain
+                  </button>
+                </div>
+              )}
+            </div>
           </nav>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1">
-          {/* Top Bar */}
-          <div className="bg-white border-b border-gray-200 px-6 py-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {activeTab === 'files' && 'Upload Files'}
-                  {activeTab === 'text' && 'Add Text Content'}
-                  {activeTab === 'website' && 'Train from Website'}
-                  {activeTab === 'instructions' && 'Bot Instructions'}
-                  {activeTab === 'settings' && 'Bot Settings'}
-                </h2>
-                <p className="text-sm text-gray-500 mt-1">
-                  {activeTab === 'files' && 'Upload documents to train your AI. Extract text from PDFs, DOCX, and TXT files.'}
-                  {activeTab === 'text' && 'Add custom text content to train your chatbot.'}
-                  {activeTab === 'website' && 'Enter website URLs to crawl and train from.'}
-                  {activeTab === 'instructions' && 'Configure how your chatbot should behave and respond.'}
-                  {activeTab === 'settings' && 'Customize your chatbot appearance and behavior.'}
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <Button variant="outline" className="flex items-center">
-                  <Eye className="mr-2 h-4 w-4" />
-                  Preview
-                </Button>
-                <Button 
-                  onClick={() => setShowPreview(true)}
-                  className="relative overflow-hidden bg-black text-white hover:bg-gray-800">
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
-                  <Eye className="mr-2 h-4 w-4" />
-                  Test Chat
-                </Button>
-                <Button className="relative overflow-hidden bg-black text-white hover:bg-gray-800">
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Changes
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Content Area */}
+        {/* Main Content Area */}
+        <div className="flex-1 relative">
+          {/* Content */}
           <div className="p-6">
+            {/* Overview Tab */}
+            {activeTab === 'overview' && (
+              <div className="max-w-6xl space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Overview</h2>
+                  <p className="text-sm text-gray-500">Get a quick overview of your chatbot's performance and status.</p>
+                </div>
+
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center">
+                        <MessageCircle className="h-8 w-8 text-blue-600" />
+                        <div className="ml-4">
+                          <p className="text-sm font-medium text-gray-600">Total Conversations</p>
+                          <p className="text-2xl font-bold text-gray-900">1,234</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center">
+                        <Users className="h-8 w-8 text-green-600" />
+                        <div className="ml-4">
+                          <p className="text-sm font-medium text-gray-600">Unique Users</p>
+                          <p className="text-2xl font-bold text-gray-900">567</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center">
+                        <TrendingUp className="h-8 w-8 text-purple-600" />
+                        <div className="ml-4">
+                          <p className="text-sm font-medium text-gray-600">Avg. Rating</p>
+                          <p className="text-2xl font-bold text-gray-900">4.8</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center">
+                        <BarChart3 className="h-8 w-8 text-yellow-600" />
+                        <div className="ml-4">
+                          <p className="text-sm font-medium text-gray-600">Resolution Rate</p>
+                          <p className="text-2xl font-bold text-gray-900">89%</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Quick Actions */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Quick Actions</CardTitle>
+                    <CardDescription>Common tasks to manage your chatbot</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <Button
+                        variant="outline"
+                        className="h-24 flex flex-col items-center justify-center space-y-2"
+                        onClick={() => {
+                          setTrainingDataOpen(true)
+                          setActiveTab('files')
+                        }}
+                      >
+                        <Upload className="h-6 w-6" />
+                        <span className="text-sm">Upload Files</span>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        className="h-24 flex flex-col items-center justify-center space-y-2"
+                        onClick={() => setActiveTab('playground')}
+                      >
+                        <Play className="h-6 w-6" />
+                        <span className="text-sm">Test Bot</span>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        className="h-24 flex flex-col items-center justify-center space-y-2"
+                        onClick={() => {
+                          setIntegrationsOpen(true)
+                          setActiveTab('website-embed')
+                        }}
+                      >
+                        <Code className="h-6 w-6" />
+                        <span className="text-sm">Get Embed Code</span>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        className="h-24 flex flex-col items-center justify-center space-y-2"
+                        onClick={() => {
+                          setActivityOpen(true)
+                          setActiveTab('analytics')
+                        }}
+                      >
+                        <BarChart3 className="h-6 w-6" />
+                        <span className="text-sm">View Analytics</span>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Playground Tab */}
+            {activeTab === 'playground' && (
+              <div className="max-w-4xl space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Playground</h2>
+                  <p className="text-sm text-gray-500">Test your chatbot in a full-screen environment.</p>
+                </div>
+
+                <Card className="h-[600px] flex flex-col">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Play className="mr-2 h-5 w-5" />
+                      Chatbot Playground
+                    </CardTitle>
+                    <CardDescription>
+                      Test your chatbot with real conversations
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-1 flex flex-col">
+                    {/* Chat Messages */}
+                    <div className="flex-1 border rounded-lg p-4 bg-gray-50 overflow-y-auto space-y-4 mb-4">
+                      {messages.map((message, index) => (
+                        <div
+                          key={index}
+                          className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div
+                            className={`max-w-xs px-4 py-2 rounded-lg ${
+                              message.type === 'user'
+                                ? 'bg-black text-white'
+                                : 'bg-white text-gray-900 border'
+                            }`}
+                          >
+                            {message.content}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Input */}
+                    <div className="flex space-x-2">
+                      <Input
+                        placeholder="Ask your chatbot anything..."
+                        value={inputMessage}
+                        onChange={(e) => setInputMessage(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && !isSending && handleSendMessage()}
+                        className="flex-1"
+                      />
+                      <Button
+                        onClick={handleSendMessage}
+                        disabled={isSending || !inputMessage.trim()}
+                        className="relative overflow-hidden bg-black text-white hover:bg-gray-800"
+                      >
+                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
+                        <Send className="w-5 h-5" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             {/* Files Tab */}
             {activeTab === 'files' && (
-              <div className="max-w-7xl">
+              <div className="max-w-7xl space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Upload Files</h2>
+                  <p className="text-sm text-gray-500">Upload documents to train your AI. Extract text from PDFs, DOCX, and TXT files.</p>
+                </div>
+
                 <div className="grid lg:grid-cols-3 gap-6">
-                  {/* Left Side - Upload Documents (2/3 width) */}
+                  {/* Left Side - Upload Documents */}
                   <div className="lg:col-span-2 space-y-6">
                     <Card>
                       <CardHeader>
@@ -509,7 +959,7 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
                     </Card>
                   </div>
 
-                  {/* Right Side - Quick Test Chat (1/3 width) */}
+                  {/* Right Side - Quick Test Chat */}
                   <div className="lg:col-span-1">
                     <Card className="h-fit sticky top-4">
                       <CardHeader>
@@ -601,214 +1051,100 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
               </div>
             )}
 
-            {/* Text Tab */}
+            {/* Other tabs would go here with similar structure */}
             {activeTab === 'text' && (
-              <div className="max-w-4xl">
+              <div className="max-w-4xl space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Add Text Content</h2>
+                  <p className="text-sm text-gray-500">Directly input text content to train your chatbot.</p>
+                </div>
                 <Card>
                   <CardHeader>
-                    <CardTitle>Add Text Content</CardTitle>
-                    <CardDescription>
-                      Directly input text content to train your chatbot.
-                    </CardDescription>
+                    <CardTitle>Text Training Data</CardTitle>
+                    <CardDescription>Add custom text content for your chatbot to learn from</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor="text-content">Text Content</Label>
-                      <Textarea
-                        id="text-content"
-                        placeholder="Enter your training text here..."
-                        className="min-h-[300px] mt-2"
-                      />
-                    </div>
-                    <Button className="relative overflow-hidden bg-black text-white hover:bg-gray-800">
+                  <CardContent>
+                    <Textarea 
+                      placeholder="Enter your training text here..."
+                      className="min-h-[300px]"
+                    />
+                    <Button className="mt-4 relative overflow-hidden bg-black text-white hover:bg-gray-800">
                       <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
-                      Add Text
+                      Add Text Content
                     </Button>
                   </CardContent>
                 </Card>
               </div>
             )}
 
-            {/* Website Tab */}
-            {activeTab === 'website' && (
-              <div className="max-w-4xl">
+            {activeTab === 'website-embed' && (
+              <div className="max-w-4xl space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Website Embed</h2>
+                  <p className="text-sm text-gray-500">Get the embed code to add your chatbot to any website.</p>
+                </div>
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center">
-                      <Link className="mr-2 h-5 w-5" />
-                      Train from Website
+                      <Code className="mr-2 h-5 w-5" />
+                      Embed Code
                     </CardTitle>
-                    <CardDescription>
-                      Enter the link to a webpage and we will visit all the pages starting from it and list them for you to choose from.
-                    </CardDescription>
+                    <CardDescription>Copy this code and paste it into your website's HTML</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor="website-url">Website URL</Label>
-                      <div className="flex gap-2 mt-2">
-                        <Input
-                          id="website-url"
-                          placeholder="https://example.com"
-                          className="flex-1"
-                        />
-                        <Button className="relative overflow-hidden bg-black text-white hover:bg-gray-800">
-                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
-                          Crawl
-                        </Button>
-                      </div>
+                  <CardContent>
+                    <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm overflow-x-auto mb-4">
+                      <code>{`<script src="https://chatstack.co.za/embed.js"></script>
+<div id="chatstack-widget" data-chatbot-id="${chatbotName.toLowerCase().replace(/\s+/g, '-')}"></div>`}</code>
                     </div>
-                    
-                    <div className="grid grid-cols-4 gap-2">
-                      {['Full Website', 'Webpage', 'PDF', 'Word Doc', 'Excel/CSV', 'Youtube', 'Freshdesk', 'Sitemap'].map((type) => (
-                        <Button key={type} variant="outline" size="sm" className="text-xs">
-                          {type}
-                        </Button>
-                      ))}
+                    <div className="flex gap-2">
+                      <Button variant="outline" className="flex items-center">
+                        <Copy className="mr-2 h-4 w-4" />
+                        Copy Code
+                      </Button>
+                      <Button variant="outline" className="flex items-center">
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Preview
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
               </div>
             )}
 
-            {/* Instructions Tab */}
-            {activeTab === 'instructions' && (
+            {/* Placeholder for other tabs */}
+            {!['overview', 'playground', 'files', 'text', 'website-embed'].includes(activeTab) && (
               <div className="max-w-4xl space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                    {activeTab.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                  </h2>
+                  <p className="text-sm text-gray-500">This section is coming soon!</p>
+                </div>
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Bot Instructions</CardTitle>
-                    <CardDescription>
-                      Configure how your chatbot should behave and respond to users.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor="greeting">Greeting Message</Label>
-                      <Input
-                        id="greeting"
-                        placeholder="How can I help you today?"
-                        className="mt-2"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="instructions">Bot Instructions</Label>
-                      <Textarea
-                        id="instructions"
-                        placeholder="You are a helpful customer support representative. Your objective is to answer questions and provide resources about..."
-                        className="min-h-[200px] mt-2"
-                      />
-                    </div>
+                  <CardContent className="p-12 text-center">
+                    <Settings className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Coming Soon</h3>
+                    <p className="text-gray-500">This feature is currently under development.</p>
                   </CardContent>
                 </Card>
               </div>
             )}
+          </div>
 
-            {/* Settings Tab */}
-            {activeTab === 'settings' && (
-              <div className="max-w-4xl">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Bot Settings</CardTitle>
-                    <CardDescription>
-                      Customize your chatbot's appearance and behavior.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor="bot-name">Bot Name</Label>
-                      <Input
-                        id="bot-name"
-                        value={chatbotName}
-                        onChange={(e) => setChatbotName(e.target.value)}
-                        className="mt-2"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="model">AI Model</Label>
-                      <select className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md">
-                        <option>GPT-4</option>
-                        <option>GPT-3.5 Turbo</option>
-                        <option>Claude</option>
-                      </select>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+          {/* Floating Save Button */}
+          <div className="fixed bottom-6 right-6 z-40">
+            <Button
+              onClick={handleSaveChatbot}
+              disabled={isSaving}
+              className="relative overflow-hidden bg-black text-white hover:bg-gray-800 shadow-lg"
+              size="lg"
+            >
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
+              <Save className="mr-2 h-5 w-5" />
+              {isSaving ? 'Saving...' : 'Save Chatbot'}
+            </Button>
           </div>
         </div>
-
-        {/* Chat Preview Modal */}
-        {showPreview && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg max-w-2xl w-full mx-4 h-[600px] flex flex-col">
-              {/* Header */}
-              <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                    <Bot className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{chatbotName}</h3>
-                    <p className="text-sm text-gray-500">AI Assistant</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowPreview(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((message, index) => (
-                  <div
-                    key={index}
-                    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-xs px-4 py-2 rounded-lg ${
-                        message.type === 'user'
-                          ? 'bg-black text-white'
-                          : 'bg-gray-100 text-gray-900'
-                      }`}
-                    >
-                      {message.content}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Input */}
-              <div className="p-4 border-t border-gray-200">
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && !isSending && handleSendMessage()}
-                    placeholder="Ask something about your documents..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    disabled={uploadedFiles.length === 0}
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={isSending || !inputMessage.trim() || uploadedFiles.length === 0}
-                    className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
-                  >
-                    <Send className="w-5 h-5" />
-                  </button>
-                </div>
-                {uploadedFiles.length === 0 && (
-                  <p className="text-xs text-gray-500 mt-2">Upload a PDF file first to start chatting</p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
