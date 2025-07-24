@@ -190,8 +190,9 @@ export default function Dashboard() {
                   </DropdownMenuItem>
                   
                   <DropdownMenuItem 
-                    className="cursor-pointer"
-                    onClick={handleAccountSettingsClick}
+                    
+                    className="cursor-pointer" 
+                    onClick={() => router.push('/account')}
                   >
                     <SettingsIcon className="mr-2 h-4 w-4" />
                     Account Settings
@@ -204,7 +205,7 @@ export default function Dashboard() {
                     onClick={handleSignOut}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
-                    Logout
+                    Sign out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

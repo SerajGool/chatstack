@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ChatStack l AI Agents for Business",
+  title: "ChatStack | AI Agents for Business",
   description: "...",
   icons: {
     icon: '/favicon.ico',
