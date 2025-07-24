@@ -15,7 +15,9 @@ import {
   ChevronDown,
   Camera,
   Save,
-  ArrowLeft
+  ArrowLeft,
+  Eye,
+  EyeOff
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -34,6 +36,11 @@ export default function AccountSettings() {
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -110,45 +117,107 @@ export default function AccountSettings() {
     setUploading(true)
 
     try {
+      // Make sure file isn't too big (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image is too big! Please use an image smaller than 5MB.')
+        return
+      }
+      
+      // Make sure it's actually an image
+      if (!file.type.startsWith('image/')) {
+        alert('Please upload an image file (JPG, PNG, etc.)')
+        return
+      }
+
       // Create a unique filename
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${user.id}.${fileExt}`
+      const fileExtension = file.name.split('.').pop()
+      const fileName = `${user.id}.${fileExtension}`
       const filePath = `profile-pictures/${fileName}`
 
-      // Upload file to Supabase Storage
+      // Upload the image to Supabase
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { upsert: true })
 
-      if (uploadError) throw uploadError
+      if (uploadError) {
+        console.error('Upload failed:', uploadError)
+        alert(`Upload failed: ${uploadError.message}`)
+        return
+      }
 
-      // Get public URL
-      const { data } = supabase.storage
+      // Get the web address of the uploaded image
+      const { data: publicUrlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath)
 
-      // Update user metadata with new avatar URL
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: { avatar_url: data.publicUrl }
+      const imageUrl = publicUrlData?.publicUrl
+      if (!imageUrl) {
+        alert('Could not get image URL')
+        return
+      }
+
+      // Save the image URL to your user profile
+      await supabase.auth.updateUser({
+        data: { avatar_url: imageUrl }
       })
 
-      if (updateError) throw updateError
-
-      // Update local user state
+      // Update what you see on screen
       setUser(prev => prev ? {
         ...prev,
         user_metadata: {
           ...prev.user_metadata,
-          avatar_url: data.publicUrl
+          avatar_url: imageUrl
         }
       } : null)
 
-      console.log('Profile picture updated successfully')
+      console.log('Profile picture updated! 🎉')
 
-    } catch (error) {
-      console.error('Error uploading profile picture:', error)
+    } catch (error: any) {
+      console.error('Something went wrong:', error)
+      alert('Something went wrong. Please try again.')
     } finally {
       setUploading(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      alert('Please fill in all password fields')
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      alert('New passwords do not match')
+      return
+    }
+
+    if (newPassword.length < 6) {
+      alert('Password must be at least 6 characters long')
+      return
+    }
+
+    setChangingPassword(true)
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      })
+
+      if (error) {
+        alert(`Password change failed: ${error.message}`)
+        return
+      }
+
+      // Clear the form
+      setNewPassword('')
+      setConfirmPassword('')
+      
+      alert('Password changed successfully! 🎉')
+
+    } catch (error: any) {
+      alert(`Error: ${error.message}`)
+    } finally {
+      setChangingPassword(false)
     }
   }
 
@@ -289,7 +358,7 @@ export default function AccountSettings() {
                 Email
               </label>
               <p className="text-sm text-gray-500 mb-3">
-                Enter your full name or a comfortable display name.
+                Your email address cannot be changed.
               </p>
               <input
                 type="email"
@@ -333,6 +402,73 @@ export default function AccountSettings() {
             >
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
               {saving ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </div>
+
+        {/* Change Password Section */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Change Password</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Update your password to keep your account secure.
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="new-password" className="block text-sm font-medium text-gray-900 mb-2">
+                New Password
+              </label>
+              <div className="relative">
+                <input
+                  id="new-password"
+                  type={showPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-900 mb-2">
+                Confirm New Password
+              </label>
+              <div className="relative">
+                <input
+                  id="confirm-password"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleChangePassword}
+              disabled={changingPassword || !newPassword || !confirmPassword}
+              className="relative overflow-hidden bg-black text-white hover:bg-gray-800 disabled:opacity-50"
+            >
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
+              {changingPassword ? 'Changing Password...' : 'Change Password'}
             </Button>
           </div>
         </div>
