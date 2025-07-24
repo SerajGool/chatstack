@@ -288,11 +288,14 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Setting up your chatbot...</h2>
+          <p className="text-sm text-gray-500">This will only take a moment</p>
+        </div>
       </div>
     )
   }
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Success Message */}
