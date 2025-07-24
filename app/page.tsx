@@ -38,7 +38,7 @@ export default function Index() {
                 <img
                   src="https://cdn.builder.io/api/v1/image/assets%2F14a0147d933d4237a37c55c120ab8ac8%2F14fb08defbab4587b0d17424824d586e?format=webp&width=800"
                   alt="ChatStack Logo"
-                  className="w-10 h-10 rounded-lg"
+                  className="w-10 h-10 rounded-lg image-logo"
                 />
               </div>
               <div className="text-3xl font-bold text-gray-900 ml-2">
@@ -46,9 +46,9 @@ export default function Index() {
               </div>
             </div>
             <nav className="hidden md:flex space-x-8">
-              <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
-              <a href="#resources" className="text-gray-600 hover:text-gray-900 transition-colors">Resources</a>
-              <a href="#contact" className="text-gray-600 hover:text-gray-900 transition-colors">Contact</a>
+              <a href="#pricing" className="text-gray-900 hover:text-gray-600 transition-colors">Pricing</a>
+              <a href="#resources" className="text-gray-900 hover:text-gray-600 transition-colors">Resources</a>
+              <a href="#contact" className="text-gray-900 hover:text-gray-600 transition-colors">Contact</a>
             </nav>
             <div className="flex items-center space-x-4">
               <Link href="/login">
@@ -73,7 +73,8 @@ export default function Index() {
               <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
                 Build intelligent<br/>
                 <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                  AI-powered Chatbots
+                  AI-powered <br/>
+                  Chatbots
                 </span><br/>
                 for your business
               </h1>
@@ -575,9 +576,9 @@ export default function Index() {
                 <img
                   src="https://cdn.builder.io/api/v1/image/assets%2F14a0147d933d4237a37c55c120ab8ac8%2F14fb08defbab4587b0d17424824d586e?format=webp&width=800"
                   alt="ChatStack Logo"
-                  className="w-8 h-8 rounded-lg"
+                  className="w-8 h-8 rounded-lg image-logo"
                 />
-                <span className="text-lg font-bold">ChatStack</span>
+                <span className="text-lg font-bold pl-2">ChatStack</span>
               </div>
               <p className="text-gray-400">
                 Proudly made in South Africa 🇿🇦
