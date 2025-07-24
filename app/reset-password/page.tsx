@@ -32,8 +32,8 @@ export default function ResetPasswordPage() {
 
     try {
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-  redirectTo: `https://chatstack.co.za/reset-password-confirm`,
-});
+        redirectTo: `https://chatstack.co.za/reset-password-confirm`,
+      });
 
       if (error) {
         setErrorMessage('Reset failed: ' + error.message);
@@ -96,7 +96,7 @@ export default function ResetPasswordPage() {
               
               <div className="text-center">
                 <Link href="/login">
-                  <Button className="w-full bg-black text-white relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 after:rounded-b hover:bg-gray-800 transition-colors">
+                  <Button className="relative overflow-hidden w-full bg-black text-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 after:rounded-b hover:bg-gray-800 transition-colors">
                     Back to Sign In
                   </Button>
                 </Link>
@@ -171,7 +171,7 @@ export default function ResetPasswordPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-black text-white relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 after:rounded-b hover:bg-gray-800 transition-colors"
+                className="relative overflow-hidden w-full bg-black text-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 after:rounded-b hover:bg-gray-800 transition-colors"
               >
                 {loading ? "Sending..." : "Reset Password"}
               </Button>

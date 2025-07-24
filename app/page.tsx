@@ -55,7 +55,9 @@ export default function Index() {
                 <Button variant="ghost" className="hidden md:inline-flex">Sign In</Button>
               </Link>
               <Link href="/get-started">
-                <Button className="bg-black text-white relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 hover:bg-gray-800 transition-colors">Get Started</Button>
+                <Button 
+                  className="relative overflow-hidden bg-black text-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 hover:bg-gray-800 transition-colors"
+                >Get Started</Button>
               </Link>
             </div>
           </div>
@@ -81,7 +83,7 @@ export default function Index() {
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
                 <Link href="/get-started">
-                  <Button size="lg" className="bg-black text-white relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 hover:bg-gray-800 transition-colors text-lg px-8 py-3">
+                  <Button size="lg" className="relative overflow-hidden bg-black text-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 hover:bg-gray-800 transition-colors text-lg px-8 py-3">
                     Build Your Chatbot
                   </Button>
                 </Link>
@@ -278,7 +280,9 @@ export default function Index() {
                   <li className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-3" />Priority Support</li>
                 </ul>
                 <Link href="/get-started">
-                  <Button className="w-full mt-6 bg-black text-white relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 hover:bg-gray-800 transition-colors">Subscribe</Button>
+                  <Button 
+                    className="relative overflow-hidden w-full mt-6 bg-black text-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 hover:bg-gray-800 transition-colors"
+                  >Subscribe</Button>
                 </Link>
               </CardContent>
             </Card>
@@ -409,7 +413,7 @@ export default function Index() {
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-center mb-6">
             <Link href="/get-started">
-              <Button size="lg" className="bg-black text-white relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 hover:bg-gray-800 transition-colors text-lg px-8 py-3">
+              <Button size="lg" className="relative overflow-hidden bg-black text-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 hover:bg-gray-800 transition-colors px-8 py-3">
                 Build Your Chatbot
               </Button>
             </Link>
@@ -471,7 +475,7 @@ export default function Index() {
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-black text-white relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 hover:bg-gray-800 transition-colors"
+                    className="relative overflow-hidden w-full bg-black text-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 hover:bg-gray-800 transition-colors"
                   >
                     {isSubmitting ? "Sending..." : "Send Message"}
                   </Button>
@@ -481,10 +485,6 @@ export default function Index() {
 
             {/* Contact Information - Right Side */}
             <div className="space-y-6">
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">Reach Us Directly</h3>
-              </div>
-
               {/* Email Section */}
               <Card className="border-gray-200 hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
@@ -612,7 +612,7 @@ export default function Index() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 ChatStack. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} ChatStack. All Rights Reserved.</p>
           </div>
         </div>
       </footer>
