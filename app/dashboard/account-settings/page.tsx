@@ -8,14 +8,15 @@ import {
   Bot, 
   BarChart3, 
   Settings, 
-  Plus, 
   HelpCircle, 
-  User as UserIcon, 
   LogOut, 
   Settings as SettingsIcon,
   LayoutDashboard,
   ChevronDown,
-  X
+  User as UserIcon,
+  Camera,
+  Save,
+  ArrowLeft
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -27,12 +28,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
-export default function Dashboard() {
+export default function AccountSettings() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [chatbotName, setChatbotName] = useState('')
-  const [isCreating, setIsCreating] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -51,6 +52,8 @@ export default function Dashboard() {
       }
       
       setUser(session.user)
+      setEmail(session.user.email || '')
+      setFullName(session.user.user_metadata?.full_name || '')
       setLoading(false)
     }
 
@@ -66,27 +69,28 @@ export default function Dashboard() {
     return email.charAt(0).toUpperCase()
   }
 
-  const handleCreateChatbot = async () => {
-    if (!chatbotName.trim()) return
+  const handleSaveProfile = async () => {
+    if (!user) return
     
-    setIsCreating(true)
+    setSaving(true)
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Create a URL-friendly slug from the name
-    const slug = chatbotName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-    
-    // Close modal and redirect to builder
-    setShowCreateModal(false)
-    setChatbotName('')
-    setIsCreating(false)
-    
-    // Redirect to builder page with success message
-    router.push(`/dashboard/chatbot/${slug}/build?success=created`)
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { full_name: fullName }
+      })
+      
+      if (error) throw error
+      
+      // Show success message (you can add toast notification here)
+      console.log('Profile updated successfully')
+      
+    } catch (error) {
+      console.error('Error updating profile:', error)
+    } finally {
+      setSaving(false)
+    }
   }
 
-  // Handle dropdown navigation
   const handleDashboardClick = () => {
     router.push('/dashboard')
   }
@@ -114,7 +118,7 @@ export default function Dashboard() {
         <nav className="px-4 space-y-1">
           <a
             href="/dashboard"
-            className="flex items-center px-3 py-2 text-sm font-medium text-gray-900 bg-gray-100 rounded-md"
+            className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
           >
             <Bot className="mr-3 h-4 w-4" />
             Chatbots
@@ -130,7 +134,7 @@ export default function Dashboard() {
           
           <a
             href="/dashboard/settings"
-            className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+            className="flex items-center px-3 py-2 text-sm font-medium text-gray-900 bg-gray-100 rounded-md"
           >
             <Settings className="mr-3 h-4 w-4" />
             Settings
@@ -143,7 +147,18 @@ export default function Dashboard() {
         {/* Top Header */}
         <div className="bg-white border-b border-gray-200 px-8 py-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold text-gray-900">Chatbots</h2>
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push('/dashboard')}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Back to Dashboard</span>
+              </Button>
+              <h2 className="text-2xl font-semibold text-gray-900">Account Settings</h2>
+            </div>
             
             <div className="flex items-center space-x-4">
               {/* Support Button */}
@@ -213,97 +228,101 @@ export default function Dashboard() {
         </div>
 
         {/* Main Content Area */}
-        <div className="p-8 relative">
-          {/* New Chatbot Button - Top Right of Canvas */}
-          <div className="absolute top-6 right-6">
-            <Button 
-              onClick={() => setShowCreateModal(true)}
-              className="relative overflow-hidden bg-black text-white hover:bg-gray-800 px-4 py-2 rounded-md font-medium"
-            >
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
-              <Plus className="mr-2 h-4 w-4" />
-              New Chatbot
-            </Button>
-          </div>
-
-          {/* Empty State */}
-          <div className="flex flex-col items-center justify-center py-32">
-            <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-              <Bot className="w-16 h-16 text-gray-400" />
-            </div>
-            
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Create your first chatbot
-            </h3>
-            
-            <p className="text-gray-500 text-center max-w-md mb-8">
-              Get started by creating your first AI chatbot. Upload your data, customize responses, and deploy it to your website.
-            </p>
-            
-            <Button 
-              onClick={() => setShowCreateModal(true)}
-              className="relative overflow-hidden bg-black text-white hover:bg-gray-800 px-6 py-3 rounded-md font-medium"
-            >
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
-              <Plus className="mr-2 h-5 w-5" />
-              Create New Chatbot
-            </Button>
-          </div>
-        </div>
-
-        {/* Create Chatbot Modal */}
-        {showCreateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4 shadow-2xl">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">Create New Chatbot</h2>
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+        <div className="p-8">
+          <div className="max-w-2xl">
+            {/* Profile Section */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-6">Profile Information</h3>
+              
+              {/* Avatar Section */}
+              <div className="flex items-center mb-6">
+                <div className="relative">
+                  <Avatar className="h-20 w-20">
+                    <AvatarImage src={user?.user_metadata?.avatar_url} />
+                    <AvatarFallback className="bg-blue-100 text-blue-700 text-xl">
+                      {user?.email ? getUserInitials(user.email) : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <button className="absolute -bottom-1 -right-1 bg-black text-white rounded-full p-2 hover:bg-gray-800 shadow-lg">
+                    <Camera className="h-3 w-3" />
+                  </button>
+                </div>
+                <div className="ml-6">
+                  <h4 className="text-sm font-medium text-gray-900">Profile Photo</h4>
+                  <p className="text-sm text-gray-500 mt-1">Update your profile photo</p>
+                  <Button variant="outline" size="sm" className="mt-2">
+                    Change Photo
+                  </Button>
+                </div>
               </div>
-              
-              <p className="text-sm text-gray-500 mb-4">
-                Give your chatbot a name to easily identify it
-              </p>
-              
-              <div className="mb-6">
-                <label htmlFor="chatbot-name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Chatbot Name
-                </label>
-                <input
-                  id="chatbot-name"
-                  type="text"
-                  placeholder="e.g. Customer Support Bot"
-                  value={chatbotName}
-                  onChange={(e) => setChatbotName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && !isCreating && handleCreateChatbot()}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+
+              {/* Form Fields */}
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name
+                  </label>
+                  <input
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Enter your full name"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                </div>
               </div>
-              
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium"
-                  disabled={isCreating}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCreateChatbot}
-                  disabled={!chatbotName.trim() || isCreating}
-                  className="flex-1 relative overflow-hidden bg-black text-white hover:bg-gray-800 px-4 py-2 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+
+              {/* Save Button */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <Button
+                  onClick={handleSaveProfile}
+                  disabled={saving}
+                  className="relative overflow-hidden bg-black text-white hover:bg-gray-800 px-4 py-2 rounded-md font-medium"
                 >
                   <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
-                  {isCreating ? 'Creating...' : 'Create'}
-                </button>
+                  <Save className="mr-2 h-4 w-4" />
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Danger Zone */}
+            <div className="bg-white rounded-lg border border-red-200 p-6">
+              <h3 className="text-lg font-medium text-red-600 mb-4">Danger Zone</h3>
+              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="text-sm font-medium text-red-800">Delete Account</h4>
+                    <p className="text-sm text-red-600 mt-1">
+                      Permanently delete your account and all associated data. This action cannot be undone.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="border-red-300 text-red-700 hover:bg-red-50"
+                  >
+                    Delete Account
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   )
