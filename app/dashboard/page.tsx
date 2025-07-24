@@ -192,7 +192,7 @@ export default function Dashboard() {
                   <DropdownMenuItem 
                     
                     className="cursor-pointer" 
-                    onClick={() => router.push('/account')}
+                    onClick={() => router.push('/dashboard/account-settings')}
                   >
                     <SettingsIcon className="mr-2 h-4 w-4" />
                     Account Settings
