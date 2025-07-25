@@ -65,7 +65,7 @@ export default function Index() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-20 pb-16 bg-gradient-to-b from-gray-50 to-white">
+      <section className="pt-20 pb-16 bg-gradient-to-b from-gray-50 to-zinc-50 section-gradient">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
@@ -133,7 +133,7 @@ export default function Index() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20" style={{backgroundColor: 'rgba(155, 155, 155, 0.27)'}}>
+      <section id="features" className="py-20 bg-gray-500/10 backdrop-blur-sm border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -261,7 +261,7 @@ export default function Index() {
             </Card>
 
             {/* Pro Plan */}
-            <Card className="border-black bg-white relative hover:scale-105 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 animate-pulse hover:animate-none">
+            <Card className="border-black bg-white relative hover:scale-101 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:animate-none">
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                 <Badge className="bg-black text-white">Most Popular</Badge>
               </div>
@@ -315,7 +315,7 @@ export default function Index() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20" style={{backgroundColor: 'rgba(155, 155, 155, 0.27)'}}>
+      <section className="py-20 bg-gray-500/10 backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -403,7 +403,7 @@ export default function Index() {
       </section>
 
       {/* Call to Action Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white section-gradient">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
             The smartest way to automate your business — without the big agency price tag
@@ -429,7 +429,7 @@ export default function Index() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-20" style={{backgroundColor: 'rgba(155, 155, 155, 0.27)'}}>
+      <section id="contact" className="py-20 bg-gray-500/10 backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">

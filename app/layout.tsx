@@ -36,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${afcad.variable} ${geistMono.variable} antialiased`}
+        className={`${afcad.variable} ${geistSans.variable} antialiased`}
       >
         {children}
       </body>
