@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Alert } from '@/components/ui/alert'
 
 export default function AccountSettings() {
   const [user, setUser] = useState<User | null>(null)
@@ -41,6 +42,7 @@ export default function AccountSettings() {
   const [changingPassword, setChangingPassword] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -101,7 +103,9 @@ export default function AccountSettings() {
         }
       } : null)
       
-      console.log('Display name updated successfully')
+      console.log('Display name updated successfully!')
+
+      setAlert({ message: 'Display name updated successfully!', type: 'success' })
       
     } catch (error) {
       console.error('Error updating display name:', error)
@@ -119,13 +123,13 @@ export default function AccountSettings() {
     try {
       // Make sure file isn't too big (5MB max)
       if (file.size > 5 * 1024 * 1024) {
-        alert('Image is too big! Please use an image smaller than 5MB.')
+        setAlert({ message: 'Image is too big! Please use an image smaller than 5MB.', type: 'error' })
         return
       }
       
       // Make sure it's actually an image
       if (!file.type.startsWith('image/')) {
-        alert('Please upload an image file (JPG, PNG, etc.)')
+        setAlert({ message: 'Please upload an image file (JPG, PNG, etc.)', type: 'error' })
         return
       }
 
@@ -141,7 +145,7 @@ export default function AccountSettings() {
 
       if (uploadError) {
         console.error('Upload failed:', uploadError)
-        alert(`Upload failed: ${uploadError.message}`)
+        setAlert({ message: `Upload failed: ${uploadError.message}`, type: 'error' })
         return
       }
 
@@ -152,7 +156,7 @@ export default function AccountSettings() {
 
       const imageUrl = publicUrlData?.publicUrl
       if (!imageUrl) {
-        alert('Could not get image URL')
+        setAlert({ message: 'Could not get image URL', type: 'error' })
         return
       }
 
@@ -172,9 +176,11 @@ export default function AccountSettings() {
 
       console.log('Profile picture updated! 🎉')
 
+      setAlert({ message: 'Profile picture updated!', type: 'success' })
+
     } catch (error: any) {
       console.error('Something went wrong:', error)
-      alert('Something went wrong. Please try again.')
+      setAlert({ message: 'Something went wrong. Please try again.', type: 'error' })
     } finally {
       setUploading(false)
     }
@@ -182,17 +188,17 @@ export default function AccountSettings() {
 
   const handleChangePassword = async () => {
     if (!newPassword || !confirmPassword) {
-      alert('Please fill in all password fields')
+      setAlert({ message: 'Please fill in all password fields', type: 'error' })
       return
     }
 
     if (newPassword !== confirmPassword) {
-      alert('New passwords do not match')
+      setAlert({ message: 'New passwords do not match', type: 'error' })
       return
     }
 
     if (newPassword.length < 6) {
-      alert('Password must be at least 6 characters long')
+      setAlert({ message: 'Password must be at least 6 characters long', type: 'error' })
       return
     }
 
@@ -204,7 +210,7 @@ export default function AccountSettings() {
       })
 
       if (error) {
-        alert(`Password change failed: ${error.message}`)
+        setAlert({ message: `Password change failed: ${error.message}`, type: 'error' })
         return
       }
 
@@ -212,10 +218,10 @@ export default function AccountSettings() {
       setNewPassword('')
       setConfirmPassword('')
       
-      alert('Password changed successfully! 🎉')
+      setAlert({ message: 'Password changed successfully!', type: 'success' })
 
     } catch (error: any) {
-      alert(`Error: ${error.message}`)
+      setAlert({ message: `Error: ${error.message}`, type: 'error' })
     } finally {
       setChangingPassword(false)
     }
@@ -239,6 +245,17 @@ export default function AccountSettings() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Alerts */}
+      {alert && (
+        <div className="fixed top-4 right-4 z-50 max-w-sm">
+          <Alert 
+            message={alert.message} 
+            type={alert.type} 
+            onClose={() => setAlert(null)} 
+          />
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-8 py-4">
         <div className="flex justify-between items-center">
