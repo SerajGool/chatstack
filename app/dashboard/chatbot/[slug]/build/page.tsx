@@ -56,11 +56,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Alert } from '@/components/ui/alert'
 
 export default function ChatbotBuilder({ params }: { params: Promise<{ slug: string }> }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [activeTab, setActiveTab] = useState('overview')
   const [chatbotName, setChatbotName] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -105,8 +106,7 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
       
       // Show success message if redirected from creation
       if (searchParams.get('success') === 'created') {
-        setShowSuccessMessage(true)
-        setTimeout(() => setShowSuccessMessage(false), 5000)
+        setAlert({ message: `Chatbot "${name}" created successfully!`, type: 'success' })
       }
     }
 
@@ -139,8 +139,7 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
     setIsSaving(false)
     
     // Show success message
-    setShowSuccessMessage(true)
-    setTimeout(() => setShowSuccessMessage(false), 3000)
+    setAlert({ message: 'Chatbot saved successfully!', type: 'success' })
   }
 
   const handleFileUpload = async (files: FileList) => {
@@ -190,10 +189,12 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
               ? { ...f, status: 'error', error: 'Failed to process file' }
               : f
           ))
+          setAlert({ message: 'Failed to process file. Please try again.', type: 'error' })
         }
       } else {
         const errorFile = { ...newFile, status: 'error', error: 'File type not yet supported. Currently supports PDF and TXT files.' }
         setUploadedFiles(prev => [...prev, errorFile])
+        setAlert({ message: 'Unsupported file type. Please upload PDF or TXT files.', type: 'error' })
       }
     }
     
@@ -203,7 +204,7 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || uploadedFiles.length === 0) {
       if (uploadedFiles.length === 0) {
-        setMessages(prev => [...prev, { type: 'bot', content: 'Please upload a PDF file first so I can help answer your questions!' }])
+        setAlert({ message: 'Please upload a PDF file first so I can help answer your questions!', type: 'error' })
       }
       return
     }
@@ -256,17 +257,10 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
       
     } catch (error) {
       setMessages(prev => {
+        setAlert({ message: 'Sorry, there was an error processing your question.', type: 'error' })
+        
         const withoutLoading = prev.slice(0, -1)
-        const newMessages = [...withoutLoading, { type: 'bot', content: 'Sorry, there was an error processing your question.' }]
-        
-        setTimeout(() => {
-          const chatContainer = document.querySelector('#chat-messages')
-          if (chatContainer) {
-            chatContainer.scrollTop = chatContainer.scrollHeight
-          }
-        }, 100)
-        
-        return newMessages
+        return withoutLoading
       })
     }
     
@@ -299,22 +293,13 @@ export default function ChatbotBuilder({ params }: { params: Promise<{ slug: str
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Success Message */}
-      {showSuccessMessage && (
-        <div className="bg-green-50 border-l-4 border-green-400 p-4 relative z-50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 text-green-400 mr-2" />
-              <p className="text-sm text-green-700 font-medium">
-                Chatbot "{chatbotName}" saved successfully!
-              </p>
-            </div>
-            <button
-              onClick={() => setShowSuccessMessage(false)}
-              className="text-green-400 hover:text-green-600"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+      {alert && (
+        <div className="fixed top-4 right-4 z-50 max-w-sm">
+          <Alert 
+            message={alert.message} 
+            type={alert.type} 
+            onClose={() => setAlert(null)} 
+          />
         </div>
       )}
 

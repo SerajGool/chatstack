@@ -5,7 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { CheckCircle, X, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+import { Alert } from '@/components/ui/alert';
 import { supabase } from '../../lib/supabase';
 
 export default function LoginPage() {
@@ -13,18 +14,18 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Auto-hide success message after 3 seconds
+  // Auto-hide success alert after 3 seconds
   useEffect(() => {
-    if (successMessage) {
+    if (alert && alert.type === 'success') {
       const timer = setTimeout(() => {
-        setSuccessMessage('');
+        setAlert(null);
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [successMessage]);
+  }, [alert]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +41,7 @@ export default function LoginPage() {
       if (error) {
         setErrorMessage('Login failed: ' + error.message);
       } else {
-        setSuccessMessage('Login successful!');
+        setAlert({ message: 'Login successful!', type: 'success' });
         // Redirect to dashboard
         setTimeout(() => {
           window.location.href = '/dashboard';
@@ -208,17 +209,13 @@ export default function LoginPage() {
         </Card>
       </div>
 
-      {/* Success Message Popup */}
-      {successMessage && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-in slide-in-from-top-2 duration-300">
-          <CheckCircle className="w-5 h-5" />
-          <span className="font-medium">{successMessage}</span>
-          <button
-            onClick={() => setSuccessMessage('')}
-            className="ml-2 text-green-200 hover:text-white"
-          >
-            <X className="w-4 h-4" />
-          </button>
+      {alert && (
+        <div className="fixed top-4 right-4 z-50 max-w-sm">
+          <Alert 
+            message={alert.message} 
+            type={alert.type} 
+            onClose={() => setAlert(null)} 
+          />
         </div>
       )}
     </div>
